@@ -1,0 +1,12 @@
+name: mancing-scrape
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12          # Playwright wheels lag new Python; 3.12 is the safe ceiling
+  - ffmpeg               # yt-dlp needs it to mux separate video+audio streams
+  - pyyaml
+  - pip
+  - pip:
+      - playwright
+      - playwright-stealth
+      - yt-dlp

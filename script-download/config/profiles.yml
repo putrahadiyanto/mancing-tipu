@@ -1,0 +1,24 @@
+# Facebook profiles to collect reels from.
+#
+# `id` is the numeric profile ID and is the stable key used for all state and output
+# paths. The slug in a /people/<slug>/<id>/ URL is cosmetic and can change, so we build
+# the reels tab URL from the numeric ID instead:
+#     https://www.facebook.com/profile.php?id=<id>&sk=reels_tab
+#
+# Set `url` explicitly only if the default form does not resolve for a given target.
+
+profiles:
+  - id: "61575602817209"
+    label: berkah-hari-ini
+    enabled: true
+    # url: https://www.facebook.com/people/Berkah-hari-ini/61575602817209/?sk=reels_tab
+
+  - id: "61551784215811"
+    label: ibu-mirna
+    enabled: true
+    url: https://www.facebook.com/people/Ibu-mirna/61551784215811/?sk=reels_tab
+
+  - id: "61557470114852"
+    label: kang-dedi
+    enabled: true
+    url: https://www.facebook.com/profile.php?id=61557470114852&sk=reels_tab&_rdc=1&_rdr

@@ -1,0 +1,9 @@
+# Live credentials — browser profile and exported cookies. Never commit.
+state/
+
+# Downloaded media.
+data/
+
+__pycache__/
+*.py[cod]
+x

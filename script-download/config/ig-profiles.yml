@@ -1,0 +1,11 @@
+# Instagram profiles to collect reels from.
+#
+# `username` is the stable key used for all state and output paths.
+# The URL is constructed as: https://www.instagram.com/<username>/reels/
+#
+# Set `url` explicitly only if the default form does not resolve for a given target.
+
+profiles:
+  - username: "example_user"
+    label: example-user
+    enabled: false  # set to true and replace with real target
