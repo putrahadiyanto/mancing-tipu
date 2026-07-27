@@ -40,6 +40,14 @@ class IGProfile:
     def archive_file(self) -> Path:
         return self.state_dir / "archive.txt"
 
+    @property
+    def selections_file(self) -> Path:
+        return self.state_dir / "selections.jsonl"
+
+    @property
+    def thumbnails_dir(self) -> Path:
+        return self.state_dir / "thumbnails"
+
 
 def reel_url(shortcode: str) -> str:
     """Build a direct reel URL from a shortcode."""
@@ -86,3 +94,4 @@ def load_ig_profiles(only: str | None = None) -> list[IGProfile]:
 def ensure_ig_dirs(profile: IGProfile) -> None:
     profile.state_dir.mkdir(parents=True, exist_ok=True)
     profile.data_dir.mkdir(parents=True, exist_ok=True)
+    profile.thumbnails_dir.mkdir(parents=True, exist_ok=True)

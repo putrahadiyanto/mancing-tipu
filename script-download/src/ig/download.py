@@ -19,9 +19,9 @@ from .auth import SESSION_COOKIE
 from .paths import IG_COOKIES_FILE, IGProfile, ensure_ig_dirs, reel_url
 from .discover import load_known_shortcodes
 
-# 720p ceiling with graceful fallback: best <=720 video + best audio, else a
-# progressive <=720 stream, else whatever exists (some reels only ship one rendition).
-FORMAT = "bv*[height<=720]+ba/b[height<=720]/b"
+# 360p ceiling with graceful fallback: best <=360 video + best audio, else a
+# progressive <=360 stream, else whatever exists (some reels only ship one rendition).
+FORMAT = "bv*[height<=360]+ba/b[height<=360]/b"
 
 
 def _ydl_opts(profile: IGProfile) -> dict:

@@ -1,9 +1,10 @@
 """CLI orchestrator for the Instagram reels pipeline.
 
     python -m src.ig.pipeline auth [--headless]
-    python -m src.ig.pipeline discover [--profile USERNAME] [--max-scrolls N] [--headless]
+    python -m src.ig.pipeline discover [--profile USERNAME] [--max-scrolls N] [--video-limit N] [--headless]
     python -m src.ig.pipeline download [--profile USERNAME] [--limit N]
-    python -m src.ig.pipeline run [--profile USERNAME] [--limit N] [--headless]
+    python -m src.ig.pipeline select [--profile USERNAME] [--limit N]
+    python -m src.ig.pipeline run [--profile USERNAME] [--limit N] [--video-limit N] [--headless]
 """
 
 from __future__ import annotations
@@ -11,7 +12,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from . import auth, discover as discover_mod, download as download_mod
+from . import auth, discover as discover_mod, download as download_mod, select as select_mod
 from .paths import load_ig_profiles
 
 
@@ -41,6 +42,7 @@ def cmd_discover(args) -> int:
                     profile,
                     max_scrolls=args.max_scrolls,
                     stall_rounds=args.stall_rounds,
+                    video_limit=args.video_limit,
                 )
             )
     _print_summary("discovery", rows)
@@ -52,6 +54,13 @@ def cmd_download(args) -> int:
     rows = [download_mod.download(p, limit=args.limit) for p in profiles]
     _print_summary("downloads", rows)
     return 1 if any(r["failed"] for r in rows) else 0
+
+
+def cmd_select(args) -> int:
+    profiles = load_ig_profiles(args.profile)
+    rows = [select_mod.select_and_download(p, limit=args.limit) for p in profiles]
+    _print_summary("selection + downloads", rows)
+    return 1 if any(r.get("download_failed", 0) for r in rows) else 0
 
 
 def cmd_run(args) -> int:
@@ -68,6 +77,7 @@ def cmd_run(args) -> int:
                     profile,
                     max_scrolls=args.max_scrolls,
                     stall_rounds=args.stall_rounds,
+                    video_limit=args.video_limit,
                 )
             )
     _print_summary("discovery", discovered)
@@ -104,6 +114,12 @@ def build_parser() -> argparse.ArgumentParser:
             default=discover_mod.DEFAULT_STALL_ROUNDS,
             help="consecutive empty scroll rounds before declaring discovery done",
         )
+        p.add_argument(
+            "--video-limit",
+            type=int,
+            default=None,
+            help="stop discovery after finding this many new shortcodes (e.g. 15)",
+        )
 
     p_auth = sub.add_parser("auth", help="establish/verify session, export cookies")
     add_browser_flags(p_auth)
@@ -118,6 +134,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_dl.add_argument("--profile", help="restrict to one profile username or label")
     p_dl.add_argument("--limit", type=int, help="max reels to fetch this run")
     p_dl.set_defaults(func=cmd_download)
+
+    p_sel = sub.add_parser(
+        "select",
+        help="interactive selection: preview thumbnails, choose which reels to download",
+    )
+    p_sel.add_argument("--profile", help="restrict to one profile username or label")
+    p_sel.add_argument("--limit", type=int, help="max reels to download after selection")
+    p_sel.set_defaults(func=cmd_select)
 
     p_run = sub.add_parser("run", help="auth -> discover -> download")
     add_browser_flags(p_run)

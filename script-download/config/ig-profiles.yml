@@ -6,6 +6,162 @@
 # Set `url` explicitly only if the default form does not resolve for a given target.
 
 profiles:
-  - username: "example_user"
-    label: example-user
-    enabled: false  # set to true and replace with real target
+  # --- A. Berita & Jurnalisme ---
+  - username: "kompastv"
+    label: kompastv
+    enabled: true
+  - username: "metrotv"
+    label: metrotv
+    enabled: true
+  - username: "liputan6.sctv"
+    label: liputan6-sctv
+    enabled: true
+  - username: "cnnindonesia"
+    label: cnnindonesia
+    enabled: true
+  - username: "tvonenews"
+    label: tvonenews
+    enabled: true
+  - username: "kumparancom"
+    label: kumparancom
+    enabled: true
+  - username: "tribunnews"
+    label: tribunnews
+    enabled: true
+  - username: "matanajwa"
+    label: matanajwa
+    enabled: true
+  - username: "narasi.tv"
+    label: narasitv
+    enabled: true
+  - username: "inewsdotid"
+    label: inews
+    enabled: true
+
+  # --- B. Public Figure ---
+  - username: "najwashihab"
+    label: najwa-shihab
+    enabled: true
+  - username: "raffinagita1717"
+    label: raffi-ahmad
+    enabled: true
+  - username: "attahalilintar"
+    label: atta-halilintar
+    enabled: true
+  - username: "raditya_dika"
+    label: raditya-dika
+    enabled: true
+  - username: "dennycagur"
+    label: denny-cagur
+    enabled: true
+  - username: "boywilliam17"
+    label: boy-william
+    enabled: true
+  - username: "andhiiikapratama"
+    label: andhika-pratama
+    enabled: true
+  - username: "vidialdiano"
+    label: vidi-aldiano
+    enabled: true
+  - username: "gadiiing"
+    label: gading-marten
+    enabled: true
+  - username: "baimwong"
+    label: baim-wong
+    enabled: true
+
+  # --- C. Public Figure & Artis Wanita ---
+  - username: "claurakiehl"
+    label: claura-kiehl
+    enabled: true
+  - username: "maudyayunda"
+    label: maudy-ayunda
+    enabled: true
+  - username: "gitasav"
+    label: gita-savitri
+    enabled: true
+  - username: "lunamaya"
+    label: luna-maya
+    enabled: true
+  - username: "nikitawillyofficial94"
+    label: nikita-willy
+    enabled: true
+  - username: "prillylatuconsina96"
+    label: prilly-latuconsina
+    enabled: true
+  - username: "chelseaoliviaa"
+    label: chelsea-olivia
+    enabled: true
+  - username: "aurelie.hermansyah"
+    label: aurelie-hermansyah
+    enabled: true
+  - username: "therealdisastr"
+    label: dian-sastro
+    enabled: true
+  - username: "irwandiferry"
+    label: ferry-irwandi
+    enabled: true
+
+  # --- D. Beauty, Fashion, & Lifestyle ---
+  - username: "tasyafarasya"
+    label: tasya-farasya
+    enabled: true
+  - username: "suhaysalim"
+    label: suhay-salim
+    enabled: true
+  - username: "abellyc"
+    label: abel-cantika
+    enabled: true
+  - username: "lifnisanders"
+    label: lifni-sanders
+    enabled: true
+  - username: "jharnabhagwani"
+    label: jharna-bhagwani
+    enabled: true
+  - username: "almirantifira"
+    label: almiranti-fira
+    enabled: true
+  - username: "rachelvennya"
+    label: rachel-vennya
+    enabled: true
+  - username: "rachgoddard"
+    label: rach-goddard
+    enabled: true
+  - username: "danangwisnu"
+    label: danang-wisnu
+    enabled: true
+  - username: "nandaarsynt"
+    label: nanda-arsyinta
+    enabled: true
+
+  # --- E. Food & Content Creator ---
+  - username: "nexcarlos"
+    label: nex-carlos
+    enabled: true
+  - username: "makanterusss"
+    label: makan-terusss
+    enabled: true
+  - username: "tanboy_kun"
+    label: tanboy-kun
+    enabled: true
+  - username: "riaricis1795"
+    label: ria-ricis
+    enabled: true
+  - username: "mgdalenaf"
+    label: magdalena-f
+    enabled: true
+  - username: "kenandgrat"
+    label: ken-and-grat
+    enabled: true
+  - username: "sumargodenny"
+    label: denny-sumargo
+    enabled: true
+  - username: "mamankkuliner"
+    label: mamank-kuliner
+    enabled: true
+  - username: "kulinerbandung"
+    label: kuliner-bandung
+    enabled: true
+  - username: "mastercorbuzier"
+    label: deddy-corbuzier
+    enabled: true

@@ -99,8 +99,12 @@ def discover(
     profile: IGProfile,
     max_scrolls: int = DEFAULT_MAX_SCROLLS,
     stall_rounds: int = DEFAULT_STALL_ROUNDS,
+    video_limit: int | None = None,
 ) -> dict:
-    """Scroll the reels tab until discovery goes dry; return a run summary."""
+    """Scroll the reels tab until discovery goes dry; return a run summary.
+
+    If video_limit is set, stop after discovering that many new shortcodes.
+    """
     ensure_ig_dirs(profile)
 
     known = load_known_shortcodes(profile)
@@ -146,6 +150,11 @@ def discover(
         else:
             stalls += 1
 
+        # Stop early if we've hit the video limit.
+        if video_limit is not None and len(new_shortcodes) >= video_limit:
+            print(f"[ig-discover] reached video limit of {video_limit}")
+            break
+
         page.keyboard.press("End")
         page.mouse.wheel(0, 2500)
         time.sleep(random.uniform(*SCROLL_PAUSE))
@@ -163,7 +172,8 @@ def discover(
         _append_manifest(profile, ordered)
 
     exhausted = stalls >= stall_rounds
-    if not exhausted:
+    hit_limit = video_limit is not None and len(new_shortcodes) >= video_limit
+    if not exhausted and not hit_limit:
         print(
             f"[ig-discover] WARNING: stopped at the --max-scrolls backstop ({max_scrolls}). "
             "Coverage is likely truncated — raise it and re-run."
