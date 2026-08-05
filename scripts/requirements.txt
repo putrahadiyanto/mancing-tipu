@@ -1,3 +1,4 @@
+groq
 playwright
 playwright-stealth
 yt-dlp
