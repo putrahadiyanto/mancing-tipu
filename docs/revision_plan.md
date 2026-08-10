@@ -41,9 +41,22 @@
 - **Task:** Filter Stage 2 IndoBERT evaluation to run **strictly on AI-generated video transcripts** (122 test samples or Stage 1 AI outputs).
 - Report **Macro F1-Score** alongside majority-class baseline comparisons ($225/312 = 72.1\%$ for overall data, or majority class ratio on AI subset).
 
-### 2.3 Verified Data Splitting & Augmentation Mechanics
-- **Data Splitting by Video ID:** Verified in [`notebook/gemastik_video_ai_detection.ipynb`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/notebook/gemastik_video_ai_detection.ipynb) and [`notebook/gemastik_audio_ai_detection.ipynb`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/notebook/gemastik_audio_ai_detection.ipynb) via `val_split.json`. All frames and 5s audio chunks of the same video ID belong to the same split.
-- **Augmentation Isolation:** Verified applied on-the-fly only to `train_samples` (`augment=True`), while validation sets use `augment=False`.
+### 2.3 Data Splitting, Augmentation, & Dual Cross-Validation Strategy
+
+- **Verified Data Mechanics:**
+  - **Data Splitting by Video ID:** Confirmed in [`notebook/gemastik_video_ai_detection.ipynb`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/notebook/gemastik_video_ai_detection.ipynb) and [`notebook/gemastik_audio_ai_detection.ipynb`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/notebook/gemastik_audio_ai_detection.ipynb) via `val_split.json`. All frames and 5s audio chunks of the same video ID belong to the same split.
+  - **Augmentation Isolation:** Confirmed applied on-the-fly only to `train_samples` (`augment=True`), while validation sets use `augment=False`.
+
+- **Dual Cross-Validation Strategy:**
+  1. **Option A (Dedicated K-Fold Experiments):**
+     - Located in dedicated directory: `notebook/kfold/`
+     - Implement `sklearn.model_selection.StratifiedGroupKFold(n_splits=5)` grouped strictly by `video_stem`.
+     - Notebooks: `notebook/kfold/kfold_video_ai_detection.ipynb`, `notebook/kfold/kfold_audio_ai_detection.ipynb`, and `notebook/kfold/kfold_multimodal_evaluation.ipynb`.
+     - Trains and evaluates 5 folds, reporting mean $\pm$ standard deviation.
+  2. **Option B (Standard Deterministic Holdout Split + Manuscript Subsection):**
+     - Located in main directory: `notebook/`
+     - Retains deterministic 80-20 holdout split (`val_split.json`) for fixed multi-modal benchmark stability across visual, audio, and text modalities.
+     - Documented in the manuscript's **Keterbatasan (Limitations)** subsection explaining training time constraints and referencing the K-Fold experiments.
 
 ### 2.4 Late Fusion Weight Ablation & End-to-End Pipeline Evaluation
 - **Late Fusion Mechanism:** Formally specify probability weighting formula:
@@ -72,18 +85,22 @@
 - **Figures:** Enlarge/re-render Figure 4 confusion matrices for print readability; add source citations for Figures 1 & 2; blur identifiable faces in dataset example figures for privacy compliance.
 - **DOIs & URLs:** Fix missing hyphens in DOIs and broken URLs caused by PDF rendering.
 
-### 3.4 Limitations Subsection
+### 3.4 Limitations Subsection (Subbab Keterbatasan)
 Add a dedicated **Keterbatasan (Limitations)** subsection covering:
-1. **Dataset Size:** Constraints of current Indonesian video dataset size.
-2. **Shortcut Learning Risks:** Potential model reliance on platform compression artifacts or generator watermarks rather than deepfake features.
-3. **Generative Model Generalization:** Evaluation limits on unseen/newer generative models.
-4. **Lack of K-Fold Cross-Validation:** Rationale for single stratified split.
+1. **Validation Scheme:** Explain rationale for primary holdout split (multimodal consistency) while referencing 5-fold cross-validation results from `notebook/kfold/`.
+2. **Dataset Size:** Constraints of current Indonesian video dataset size.
+3. **Shortcut Learning Risks:** Potential model reliance on platform compression artifacts or generator watermarks rather than deepfake features.
+4. **Generative Model Generalization:** Evaluation limits on unseen/newer generative models.
 
 ---
 
 ## 🗂️ Workspace Target Files
 
 - 🆕 **[`notebook/gemastik_base_model_inference.ipynb`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/notebook/gemastik_base_model_inference.ipynb)**: Dedicated zero-shot base model inference notebook.
+- 📁 **`notebook/kfold/`**: Dedicated directory for 5-Fold Stratified GroupKFold cross-validation notebooks.
+  - `notebook/kfold/kfold_video_ai_detection.ipynb`
+  - `notebook/kfold/kfold_audio_ai_detection.ipynb`
+  - `notebook/kfold/kfold_multimodal_evaluation.ipynb`
 - 📓 **[`notebook/gemastik_multimodal_fusion_evaluation.ipynb`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/notebook/gemastik_multimodal_fusion_evaluation.ipynb)**: Late fusion ablation, Stage 2 AI-only evaluation, End-to-End pipeline.
 - 📄 **[`docs/revision_plan.md`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/docs/revision_plan.md)**: Master revision plan document.
 - 📄 **[`docs/agents.md`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/docs/agents.md)**: Multi-agent system architecture reference.
