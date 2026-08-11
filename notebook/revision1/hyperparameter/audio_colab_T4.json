@@ -1,0 +1,21 @@
+{
+  "modality": "audio",
+  "gpu_profile": "audio_colab_T4",
+  "gpu_name": "NVIDIA T4",
+  "vram_gb": 16,
+  "hf_model_id": "MelodyMachine/Deepfake-audio-detection-V2",
+  "batch_size": 8,
+  "epochs": 10,
+  "learning_rate": 5e-05,
+  "weight_decay": 0.01,
+  "sample_rate": 16000,
+  "audio_chunk_duration_sec": 5.0,
+  "max_audio_samples": 80000,
+  "num_workers": 2,
+  "pin_memory": true,
+  "persistent_workers": true,
+  "use_amp_fp16": true,
+  "early_stopping_patience": 3,
+  "model_save_dir": "/content/drive/MyDrive/Gemastik26/models/revision1",
+  "kfold_splits_file": "/content/drive/MyDrive/Gemastik26/kfold_splits.json"
+}

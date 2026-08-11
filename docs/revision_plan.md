@@ -21,10 +21,15 @@ notebook/                                      <-- Original Submission Notebooks
 
 notebook/revision1/                            <-- Revision 1 (5-Fold Stratified GroupKFold Pipeline)
 ├── gemastik_base_model_inference.ipynb        (Completed: Dedicated Base Model Zero-Shot Inference)
-├── generate_kfold_split.ipynb                 (Standalone 5-Fold Stratified GroupKFold Split Generator)
-├── kfold_video_ai_detection.ipynb             (5-Fold Video ViT Fine-Tuning Pipeline)
+├── generate_kfold_split.ipynb                 (Completed: 5-Fold Stratified GroupKFold Split Generator & EDA)
+├── kfold_video_ai_detection.ipynb             (5-Fold Video ViT Fine-Tuning Pipeline — L4 Optimized)
 ├── kfold_audio_ai_detection.ipynb             (5-Fold Audio Wav2Vec2 Fine-Tuning Pipeline)
-└── kfold_multimodal_evaluation.ipynb          (5-Fold Multimodal Fusion & Stage 2 AI-Only Evaluation)
+├── kfold_multimodal_evaluation.ipynb          (5-Fold Multimodal Fusion & Stage 2 AI-Only Evaluation)
+└── hyperparameter/                            <-- Modality & GPU Hyperparameter Config Directory
+    ├── video_colab_L4.json                    (Video ViT — NVIDIA L4 24GB VRAM Hyperparameter Config)
+    ├── video_colab_T4.json                    (Video ViT — NVIDIA T4 16GB VRAM Hyperparameter Config)
+    ├── audio_colab_L4.json                    (Audio Wav2Vec2 — NVIDIA L4 24GB VRAM Hyperparameter Config)
+    └── audio_colab_T4.json                    (Audio Wav2Vec2 — NVIDIA T4 16GB VRAM Hyperparameter Config)
 
 Drive Directory Structure:
 /content/drive/MyDrive/Gemastik26/kfold_splits.json  <-- Exported 5-Fold Split Dictionary

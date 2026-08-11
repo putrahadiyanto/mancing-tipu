@@ -157,9 +157,10 @@ By combining deepfake detection with semantic fraud analysis, **Project Mancing-
 - 📓 **[`notebook/`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/notebook)**: Original submission notebooks (**100% UNTOUCHED** as historical baseline).
 - 📁 **[`notebook/revision1/`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/notebook/revision1)**: Revised 5-Fold Stratified GroupKFold Revision Pipeline:
   - `gemastik_base_model_inference.ipynb`: Dedicated zero-shot base model inference notebook.
-  - `generate_kfold_split.ipynb`: Standalone 5-Fold Stratified GroupKFold split generator (`kfold_splits.json`).
-  - `kfold_video_ai_detection.ipynb`: 5-Fold Video ViT fine-tuning pipeline.
+  - `generate_kfold_split.ipynb`: Standalone 5-Fold Stratified GroupKFold split generator & EDA (`kfold_splits.json`).
+  - `kfold_video_ai_detection.ipynb`: 5-Fold Video ViT fine-tuning pipeline (L4 GPU Optimized).
   - `kfold_audio_ai_detection.ipynb`: 5-Fold Audio Wav2Vec2 fine-tuning pipeline.
   - `kfold_multimodal_evaluation.ipynb`: 5-Fold Multimodal late-fusion, weight ablation, Stage 2 AI-only evaluation, and end-to-end pipeline.
+  - `hyperparameter/`: Modality & GPU Hyperparameter config directory (`video_colab_L4.json`, `video_colab_T4.json`, `audio_colab_L4.json`, `audio_colab_T4.json`).
 - 📜 **[`scripts/`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/scripts)**: Helper utilities for dataset sampling and ASR transcription.
 - 📥 **[`script-download/`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/script-download)**: Social media media scraper and data ingestion pipeline.

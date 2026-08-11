@@ -1,0 +1,21 @@
+{
+  "modality": "audio",
+  "gpu_profile": "audio_colab_L4",
+  "gpu_name": "NVIDIA L4",
+  "vram_gb": 24,
+  "hf_model_id": "MelodyMachine/Deepfake-audio-detection-V2",
+  "batch_size": 16,
+  "epochs": 10,
+  "learning_rate": 5e-05,
+  "weight_decay": 0.01,
+  "sample_rate": 16000,
+  "audio_chunk_duration_sec": 5.0,
+  "max_audio_samples": 80000,
+  "num_workers": 4,
+  "pin_memory": true,
+  "persistent_workers": true,
+  "use_amp_fp16": true,
+  "early_stopping_patience": 3,
+  "model_save_dir": "/content/drive/MyDrive/Gemastik26/models/revision1",
+  "kfold_splits_file": "/content/drive/MyDrive/Gemastik26/kfold_splits.json"
+}
