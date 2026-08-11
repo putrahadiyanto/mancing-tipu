@@ -39,6 +39,75 @@ Drive Directory Structure:
 
 ---
 
+## 🎬 Internal Training Notebook Execution Flow (`kfold_video_ai_detection.ipynb`)
+
+The training notebook follows a strict internal 8-stage execution flow:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 1: Setup Environment & Hardware Check                                            │
+│   • Mount Google Drive & detect GPU profile (NVIDIA L4 24GB VRAM)                       │
+│   • Dynamically load hyperparameter config: hyperparameter/video_colab_L4.json         │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │
+                                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 2: Smart Unzip & 1 FPS Frame Extraction                                           │
+│   • Unzip train.zip & trainAI.zip to Colab SSD (Smart Skip if target exists)           │
+│   • Extract 1 FPS frames (max 30 frames/video) to dataset_frames/ (Smart Skip if extracted)│
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │
+                                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 3: Strict 5-Fold Split Loading (`kfold_splits.json`)                             │
+│   • Strictly load kfold_splits.json from Drive                                         │
+│   • Throws explicit FileNotFoundError if missing (No on-the-fly generation allowed)     │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │
+                                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 4: PyTorch Dataset & Data Augmentations (Section 2B.2)                           │
+│   • aug_train_transform: RandomResizedCrop + HorizontalFlip + Rotation + ColorJitter    │
+│   • val_transform: Non-augmented Resize + ToTensor + Normalize                         │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │
+                                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 5: 5-Fold ViT Fine-Tuning Engine (`train_vit_kfold_pipeline`)                     │
+│   • Smart Skip: Check if fold checkpoint exists in models/revision1/ -> Skip training!  │
+│   • Full Fine-Tuning: AdamW (all 86M ViT params) + AMP FP16                               │
+│   • Dynamic Scheduler: ReduceLROnPlateau(mode='min', factor=0.5, patience=2)            │
+│   • Early Stopping: Triggered if val loss fails to improve for 3 epochs (patience=3)  │
+│   • Save Checkpoints: dima806_deepfake_aug_fold1..5 to models/revision1/               │
+│   • VRAM Cleanup: del model + torch.cuda.empty_cache() between folds                   │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │
+                                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 6: 5-Fold Out-of-Fold (OOF) Metrics & Confusion Matrix Visualizations            │
+│   • Subplot Heatmaps: Plot 5 individual fold confusion matrices                        │
+│   • 🏆 Overall Combined Confusion Matrix: Plot master confusion matrix for 100% test set  │
+│   • Paper Metrics: Compute 5-Fold Mean ± Std (Accuracy, Precision, Recall, Macro F1)   │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │
+                                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 7: 5-Fold Soft Voting Ensemble Inference Helper                                  │
+│   • Build predict_video_kfold_ensemble() helper                                        │
+│   • Soft Probability Averaging across all 5 fold checkpoints for robust prediction      │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │
+                                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 8: Independent Held-Out Test Set Evaluation (`testReal.zip` & `testAI.zip`)       │
+│   • Unzip dedicated test archives from Drive (testReal.zip & testAI.zip)               │
+│   • Run 5-Fold Soft Voting Ensemble inference on independent test videos               │
+│   • Plot Dedicated Independent Test Set Confusion Matrix & Classification Report       │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## 🔍 Section 1: Pretrained Model Label Mapping & Baseline Corrections
 
 ### 1.1 Verified Hugging Face Config `id2label` Results
@@ -84,7 +153,7 @@ Drive Directory Structure:
 - **Target File:** `notebook/revision1/kfold_video_ai_detection.ipynb`
 - **Save Location:** `MODEL_SAVE_DIR = "/content/drive/MyDrive/Gemastik26/models/revision1"`
 - **Task:** 
-  - Load `kfold_splits.json`.
+  - **Strict Split Loading:** Strictly load `kfold_splits.json` from Google Drive (`/content/drive/MyDrive/Gemastik26/kfold_splits.json`). No on-the-fly split generation is allowed inside training notebooks; throws an explicit `FileNotFoundError` if missing.
   - For each fold (1 to 5):
     - Train ViT (`dima806`) on fold training videos with train-set-only data augmentation (`aug_train_transform`: `RandomHorizontalFlip`, `RandomRotation`, `ColorJitter`).
     - Evaluate on fold validation videos without augmentation (`val_transform`).
@@ -92,6 +161,7 @@ Drive Directory Structure:
     - **Early Stopping:** Trigger early stopping if validation loss fails to improve for 3 consecutive epochs (`patience=3`).
     - Save fold models as `dima806_deepfake_aug_fold{K}`.
   - Report 5-fold mean $\pm$ standard deviation for Accuracy, Precision, Recall, and Macro F1-Score.
+  - **Independent Test Evaluation (Section 10):** Evaluates the 5-Fold Soft Voting Ensemble on the dedicated independent holdout test set (`testReal.zip` & `testAI.zip`), outputting an independent Test Set Confusion Matrix heatmap and classification report.
 
 ### 2.4 5-Fold Audio Wav2Vec2 Fine-Tuning Pipeline
 - **Target File:** `notebook/revision1/kfold_audio_ai_detection.ipynb`
