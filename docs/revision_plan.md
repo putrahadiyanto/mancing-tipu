@@ -63,13 +63,15 @@ Drive Directory Structure:
 - **Status:** **IMPLEMENTED.**
 - Evaluates raw `dima806` ViT and `MelodyMachine` Wav2Vec2 base models with explicit index remapping (`Audio: 0 -> 1, 1 -> 0`).
 
-### 2.2 Standalone 5-Fold Stratified GroupKFold Split Generator
+### 2.2 Standalone 5-Fold Stratified GroupKFold Split Generator & Distribution Audit
 - **Target File:** `notebook/revision1/generate_kfold_split.ipynb`
-- **Task:** 
-  - Load all video samples.
+- **Task & Distribution Mechanics:** 
+  - Load all unique video stems from the dataset.
   - Run `sklearn.model_selection.StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)`.
-  - Group strictly by `video_stem` (`Path(v_folder).name`), guaranteeing that all frames and 5s audio chunks of the same video ID remain together in the exact same fold.
-  - Stratify by class label (`0: Real, 1: AI`) to ensure balanced class distributions across all 5 validation folds.
+  - **Group Constraint (Zero Leakage):** Grouped strictly by `video_stem` (`Path(v_folder).name`), guaranteeing that all frames and 5s audio chunks of the same video ID remain together in the exact same fold.
+  - **Stratification Constraint (Preserving Main Distribution):** Optimizes video group assignments so that **every single validation fold (Folds 1–5) strictly mirrors the main overall dataset class ratio** (e.g. ~61% Real / ~39% AI).
+  - **Review 2 Resolution:** Directly fixes the reviewer's criticism (*"Proporsi kelas train dan test sangat berbeda"*) by guaranteeing identical class proportions across all train and validation splits.
+  - Run visual EDA benchmarking main dataset class percentages against Folds 1–5.
   - Verify 0 video overlap across folds.
   - Export `kfold_splits.json` to Google Drive (`/content/drive/MyDrive/Gemastik26/kfold_splits.json`).
 
