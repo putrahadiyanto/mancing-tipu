@@ -169,11 +169,13 @@ The training notebook follows a strict internal 8-stage execution flow:
 - **Save Location:** `MODEL_SAVE_DIR = "/content/drive/MyDrive/Gemastik26/models/revision1"`
 - **Task & Verification:** 
   - **Strict Split Loading:** Strictly load `kfold_splits.json` from Google Drive (`/content/drive/MyDrive/Gemastik26/kfold_splits.json`). No on-the-fly split generation fallback allowed; throws `FileNotFoundError` if missing.
+  - **Pretrained Head Label Alignment:** Preserves `MelodyMachine`'s pretrained head alignment with `id2label = {0: "AI", 1: "Real"}` and `label2id = {"AI": 0, "Real": 1}`, setting sample target `0 = AI` and `1 = Real` to reuse pretrained classifier weights directly.
   - For each fold (1 to 5):
-    - Chunk audio into 5-second overlapping segments (80,000 samples at 16kHz mono).
+    - Chunk audio into non-overlapping 5-second segments (80,000 samples at 16kHz mono, `stride_samples = max_samples`).
     - Fine-tune Wav2Vec2 (`MelodyMachine`) with Section 2B.3 train-only waveform augmentations (`apply_audio_augmentations`: Additive Gaussian Noise, Gain, Time Shift).
     - Evaluate fold validation audio without augmentation (`augment=False`).
-    - **Dynamic Learning Rate Scheduling:** Apply `ReduceLROnPlateau(mode='min', factor=0.5, patience=2, min_lr=1e-6)` on validation loss.
+  - **Learning Rate & Optimizer:** AdamW optimizer with initial `learning_rate = 3e-5` (0.00003) matching the original baseline notebook, and `weight_decay = 0.01`.
+    - **Learning Rate Scheduling:** Apply `CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)` for smooth learning rate decay across all 10 epochs.
     - **Early Stopping:** Apply early stopping based on validation loss (`patience=3`).
     - Save fold models as `melody_audio_aug_fold{K}` to `models/revision1/`.
   - Report 5-fold mean $\pm$ standard deviation for Accuracy, Precision, Recall, and Macro F1-Score with subplot heatmaps and master combined OOF confusion matrix.
@@ -211,7 +213,7 @@ To ensure model robustness against social media compression and real-world audio
 - **Additive Gaussian Noise:** $\text{SNR} \in [15, 30]\text{ dB}$ (`p=0.5`) — Simulates background environmental noise (street noise, room reverberation).
 - **Random Gain / Volume Adjustment:** Gain scale $\in [-6\text{ dB}, +6\text{ dB}]$ (`p=0.5`) — Simulates varying microphone sensitivities and distances.
 - **Time Shift / Roll:** Shift up to $\pm 10\%$ in time (`p=0.5`) — Simulates random phrase alignment offsets.
-- **5-Second Overlapping Chunking:** Chunks 16kHz mono audio into 5s windows (80,000 samples) with 50% stride overlap during training.
+- **5-Second Non-Overlapping Chunking:** Chunks 16kHz mono audio into non-overlapping 5s windows (80,000 samples) with 5s stride step size (`stride_samples = max_samples`), matching the original baseline notebook chunking structure.
 
 ---
 

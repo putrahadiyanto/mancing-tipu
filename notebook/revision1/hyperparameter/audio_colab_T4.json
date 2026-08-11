@@ -6,7 +6,7 @@
   "hf_model_id": "MelodyMachine/Deepfake-audio-detection-V2",
   "batch_size": 8,
   "epochs": 10,
-  "learning_rate": 5e-05,
+  "learning_rate": 3e-05,
   "weight_decay": 0.01,
   "sample_rate": 16000,
   "audio_chunk_duration_sec": 5.0,
@@ -18,8 +18,6 @@
   "early_stopping_patience": 3,
   "model_save_dir": "/content/drive/MyDrive/Gemastik26/models/revision1",
   "kfold_splits_file": "/content/drive/MyDrive/Gemastik26/kfold_splits.json",
-  "scheduler_type": "ReduceLROnPlateau",
-  "reduce_lr_factor": 0.5,
-  "reduce_lr_patience": 2,
+  "scheduler_type": "CosineAnnealingLR",
   "min_lr": 1e-06
 }
