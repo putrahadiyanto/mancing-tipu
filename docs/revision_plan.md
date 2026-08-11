@@ -163,19 +163,21 @@ The training notebook follows a strict internal 8-stage execution flow:
   - Report 5-fold mean $\pm$ standard deviation for Accuracy, Precision, Recall, and Macro F1-Score.
   - **Independent Test Evaluation (Section 10):** Evaluates the 5-Fold Soft Voting Ensemble on the dedicated independent holdout test set (`testReal.zip` & `testAI.zip`), outputting an independent Test Set Confusion Matrix heatmap and classification report.
 
-### 2.4 5-Fold Audio Wav2Vec2 Fine-Tuning Pipeline
+### 2.4 5-Fold Audio Wav2Vec2 Fine-Tuning Pipeline [COMPLETED]
 - **Target File:** `notebook/revision1/kfold_audio_ai_detection.ipynb`
+- **Status:** **IMPLEMENTED.**
 - **Save Location:** `MODEL_SAVE_DIR = "/content/drive/MyDrive/Gemastik26/models/revision1"`
-- **Task:** 
-  - Load `kfold_splits.json`.
+- **Task & Verification:** 
+  - **Strict Split Loading:** Strictly load `kfold_splits.json` from Google Drive (`/content/drive/MyDrive/Gemastik26/kfold_splits.json`). No on-the-fly split generation fallback allowed; throws `FileNotFoundError` if missing.
   - For each fold (1 to 5):
-    - Chunk audio into 5-second overlapping segments (16kHz mono).
-    - Fine-tune Wav2Vec2 (`MelodyMachine`) with train-only Gaussian noise/gain augmentation (`augment=True`).
+    - Chunk audio into 5-second overlapping segments (80,000 samples at 16kHz mono).
+    - Fine-tune Wav2Vec2 (`MelodyMachine`) with Section 2B.3 train-only waveform augmentations (`apply_audio_augmentations`: Additive Gaussian Noise, Gain, Time Shift).
     - Evaluate fold validation audio without augmentation (`augment=False`).
     - **Dynamic Learning Rate Scheduling:** Apply `ReduceLROnPlateau(mode='min', factor=0.5, patience=2, min_lr=1e-6)` on validation loss.
     - **Early Stopping:** Apply early stopping based on validation loss (`patience=3`).
-    - Save fold models as `melody_audio_deepfake_aug_fold{K}`.
-  - Report 5-fold mean $\pm$ standard deviation for Accuracy, Precision, Recall, and Macro F1-Score.
+    - Save fold models as `melody_audio_aug_fold{K}` to `models/revision1/`.
+  - Report 5-fold mean $\pm$ standard deviation for Accuracy, Precision, Recall, and Macro F1-Score with subplot heatmaps and master combined OOF confusion matrix.
+  - **Independent Test Evaluation (Section 10):** Evaluates 5-Fold Soft Voting Audio Ensemble on dedicated test archives (`testReal.zip` & `testAI.zip`), plotting independent Test Set Confusion Matrix heatmap and classification report.
 
 ### 2.5 5-Fold Multimodal Fusion & Stage 2 (IndoBERT) Evaluation Pipeline
 - **Target File:** `notebook/revision1/kfold_multimodal_evaluation.ipynb`
