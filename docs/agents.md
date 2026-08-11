@@ -154,9 +154,12 @@ By combining deepfake detection with semantic fraud analysis, **Project Mancing-
 
 ## 🗂️ Workspace Architecture Overview
 
-- 📓 **[`notebook/`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/notebook)**: Core experimentation and pipeline evaluation notebooks.
-  - [`gemastik_video_ai_detection.ipynb`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/notebook/gemastik_video_ai_detection.ipynb): Fine-tuning Vision Transformer for video visual manipulation detection.
-  - [`gemastik_audio_ai_detection.ipynb`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/notebook/gemastik_audio_ai_detection.ipynb): Fine-tuning Wav2Vec2 for audio synthetic voice detection.
-  - [`gemastik_multimodal_fusion_evaluation.ipynb`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/notebook/gemastik_multimodal_fusion_evaluation.ipynb): Multimodal late-fusion evaluation and IndoBERT fraud classification.
+- 📓 **[`notebook/`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/notebook)**: Original submission notebooks (**100% UNTOUCHED** as historical baseline).
+- 📁 **[`notebook/revision1/`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/notebook/revision1)**: Revised and newly added notebooks:
+  - `gemastik_base_model_inference.ipynb`: Dedicated zero-shot base model inference notebook.
+  - `gemastik_video_ai_detection.ipynb`: Revised ViT fine-tuning notebook.
+  - `gemastik_audio_ai_detection.ipynb`: Revised Wav2Vec2 fine-tuning notebook.
+  - `gemastik_multimodal_fusion_evaluation.ipynb`: Multimodal late-fusion, Stage 2 AI-only evaluation, and end-to-end pipeline evaluation.
+  - `kfold/`: Dedicated 5-Fold Stratified GroupKFold cross-validation notebooks.
 - 📜 **[`scripts/`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/scripts)**: Helper utilities for dataset sampling and ASR transcription.
 - 📥 **[`script-download/`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/script-download)**: Social media media scraper and data ingestion pipeline.
