@@ -88,8 +88,9 @@ Drive Directory Structure:
   - For each fold (1 to 5):
     - Train ViT (`dima806`) on fold training videos with train-set-only data augmentation (`aug_train_transform`: `RandomHorizontalFlip`, `RandomRotation`, `ColorJitter`).
     - Evaluate on fold validation videos without augmentation (`val_transform`).
-    - Apply early stopping based on validation loss (patience=3).
-    - Save fold models as `dima806_deepfake_raw_fold{K}` and `dima806_deepfake_aug_fold{K}`.
+    - **Dynamic Learning Rate Scheduling:** Apply `ReduceLROnPlateau(mode='min', factor=0.5, patience=2, min_lr=1e-6)` on validation loss, dropping learning rate when loss plateaus for 2 epochs.
+    - **Early Stopping:** Trigger early stopping if validation loss fails to improve for 3 consecutive epochs (`patience=3`).
+    - Save fold models as `dima806_deepfake_aug_fold{K}`.
   - Report 5-fold mean $\pm$ standard deviation for Accuracy, Precision, Recall, and Macro F1-Score.
 
 ### 2.4 5-Fold Audio Wav2Vec2 Fine-Tuning Pipeline
@@ -101,8 +102,9 @@ Drive Directory Structure:
     - Chunk audio into 5-second overlapping segments (16kHz mono).
     - Fine-tune Wav2Vec2 (`MelodyMachine`) with train-only Gaussian noise/gain augmentation (`augment=True`).
     - Evaluate fold validation audio without augmentation (`augment=False`).
-    - Apply early stopping based on validation loss (patience=3).
-    - Save fold models as `melody_audio_deepfake_raw_fold{K}` and `melody_audio_deepfake_aug_fold{K}`.
+    - **Dynamic Learning Rate Scheduling:** Apply `ReduceLROnPlateau(mode='min', factor=0.5, patience=2, min_lr=1e-6)` on validation loss.
+    - **Early Stopping:** Apply early stopping based on validation loss (`patience=3`).
+    - Save fold models as `melody_audio_deepfake_aug_fold{K}`.
   - Report 5-fold mean $\pm$ standard deviation for Accuracy, Precision, Recall, and Macro F1-Score.
 
 ### 2.5 5-Fold Multimodal Fusion & Stage 2 (IndoBERT) Evaluation Pipeline
@@ -123,7 +125,7 @@ Drive Directory Structure:
 ### 3.1 Data Tables & Metric Corrections
 - **Table II (Dataset Composition):** Update with exact 5-fold cross-validation split distributions (stems per fold, class balance).
 - **Table IV & Table V:** Replace single holdout metrics with **5-Fold Cross-Validation Mean $\pm$ Standard Deviation** metrics (Accuracy, Precision, Recall, Macro F1-Score).
-- **Hyperparameter Table:** Add explicit table detailing epochs, learning rate ($1\times 10^{-4}$ / Cosine Annealing), batch size, optimizer (AdamW), weight decay, frame rate (1 FPS), audio chunking (5s), early stopping patience, and 5-fold CV scheme.
+- **Hyperparameter Table:** Add explicit table detailing epochs, learning rate ($1\times 10^{-4}$ for video, $5\times 10^{-5}$ for audio), LR scheduler (`ReduceLROnPlateau` with factor 0.5 and patience 2), batch size, optimizer (AdamW), weight decay, frame rate (1 FPS), audio chunking (5s), early stopping patience (3), and 5-fold CV scheme.
 
 ### 3.2 Subhead Titles & Terminology Standardization
 - Change subheader title: `"MATRIKS EVALUASI"` $\rightarrow$ `"METRIK EVALUASI"`.
