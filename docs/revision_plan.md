@@ -181,16 +181,15 @@ The training notebook follows a strict internal 8-stage execution flow:
   - Report 5-fold mean $\pm$ standard deviation for Accuracy, Precision, Recall, and Macro F1-Score with subplot heatmaps and master combined OOF confusion matrix.
   - **Independent Test Evaluation (Section 10):** Evaluates 5-Fold Soft Voting Audio Ensemble on dedicated test archives (`testReal.zip` & `testAI.zip`), plotting independent Test Set Confusion Matrix heatmap and classification report.
 
-### 2.5 5-Fold Multimodal Fusion & Stage 2 (IndoBERT) Evaluation Pipeline
+### 2.5 5-Fold Multimodal Video + Audio Late Fusion Evaluation Pipeline [COMPLETED]
 - **Target File:** `notebook/revision1/kfold_multimodal_evaluation.ipynb`
+- **Status:** **IMPLEMENTED.**
 - **Task:**
-  - Load fold models for both Video and Audio across all 5 folds.
-  - Evaluate multimodal late fusion ensemble:
-    $$P_{\text{multimodal}} = w_{\text{video}} \cdot P_{\text{video}} + w_{\text{audio}} \cdot P_{\text{audio}}$$
-  - Run late fusion weight ablation ($w_{\text{video}} \in [0.1, 0.9]$) per fold.
-  - Restrict Stage 2 IndoBERT evaluation strictly to **AI-generated video transcripts** (122 test samples or Stage 1 AI outputs).
-  - Implement joint end-to-end pipeline evaluation (`Stage 1 Ensemble -> Stage 2 IndoBERT`) measuring missed scam rates per fold.
-  - Report overall 5-fold mean $\pm$ standard deviation for Accuracy, Precision, Recall, and **Macro F1-Score**.
+  - Load fine-tuned fold checkpoints for both Video (`dima806_deepfake_aug_fold1..5`) and Audio (`melody_audio_aug_fold1..5`) across all 5 folds.
+  - Evaluate 50/50 multimodal late fusion ensemble:
+    $$P_{\text{multimodal}} = 0.5 \cdot P_{\text{video}} + 0.5 \cdot P_{\text{audio}}$$
+  - Report overall 5-fold mean $\pm$ standard deviation for Accuracy, Precision, Recall, and **Macro F1-Score** with subplot heatmaps and master combined OOF confusion matrix.
+  - **Independent Test Evaluation (Section 10):** Evaluates 5-Fold Multimodal Soft Voting Ensemble on dedicated test archives (`testReal.zip` & `testAI.zip`), plotting independent Test Set Confusion Matrix heatmap and classification report.
 
 ---
 
