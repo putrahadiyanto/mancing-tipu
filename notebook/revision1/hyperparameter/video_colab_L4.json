@@ -20,5 +20,9 @@
   "use_amp_fp16": true,
   "early_stopping_patience": 3,
   "model_save_dir": "/content/drive/MyDrive/Gemastik26/models/revision1",
-  "kfold_splits_file": "/content/drive/MyDrive/Gemastik26/kfold_splits.json"
+  "kfold_splits_file": "/content/drive/MyDrive/Gemastik26/kfold_splits.json",
+  "scheduler_type": "ReduceLROnPlateau",
+  "reduce_lr_factor": 0.5,
+  "reduce_lr_patience": 2,
+  "min_lr": 1e-06
 }

@@ -120,6 +120,29 @@ Drive Directory Structure:
 
 ---
 
+## 🎨 Section 2B: Multimodal Data Augmentation Strategy
+
+To ensure model robustness against social media compression and real-world audio/video noise without causing artifact-erasing distortions:
+
+### 2B.1 Core Augmentation Principles
+1. **Strict Train-Set Scope:** Augmentations are applied strictly on-the-fly to the training DataLoader (`aug_train_transform` for video, `augment=True` for audio). Validation and test sets remain **100% un-augmented** to guarantee unbiased evaluation metrics.
+2. **Artifact Preservation:** Augmentations are selected so they do not destroy subtle deepfake artifacts (e.g. boundary blending, lip-sync misalignment, facial flickering).
+
+### 2B.2 Video Modality Augmentation Pipeline (`torchvision.transforms`)
+- **Random Horizontal Flip:** `p=0.5` — Preserves facial deepfake geometry while doubling spatial orientation variability.
+- **Random Rotation:** `degrees=15` (`p=0.5`) — Simulates slight handheld camera tilt without breaking face alignment.
+- **Color Jitter:** `brightness=0.2, contrast=0.2, saturation=0.2` (`p=0.5`) — Simulates lighting and exposure variations.
+- **Random Resized Crop:** Scale `[0.8, 1.0]` resized to `(224, 224)` — Simulates minor framing shifts and zoom levels.
+- **Normalization:** ImageNet standard mean `[0.485, 0.456, 0.406]` & std `[0.229, 0.224, 0.225]`.
+
+### 2B.3 Audio Modality Augmentation Pipeline (`torchaudio` / PyTorch)
+- **Additive Gaussian Noise:** $\text{SNR} \in [15, 30]\text{ dB}$ (`p=0.5`) — Simulates background environmental noise (street noise, room reverberation).
+- **Random Gain / Volume Adjustment:** Gain scale $\in [-6\text{ dB}, +6\text{ dB}]$ (`p=0.5`) — Simulates varying microphone sensitivities and distances.
+- **Time Shift / Roll:** Shift up to $\pm 10\%$ in time (`p=0.5`) — Simulates random phrase alignment offsets.
+- **5-Second Overlapping Chunking:** Chunks 16kHz mono audio into 5s windows (80,000 samples) with 50% stride overlap during training.
+
+---
+
 ## 📝 Section 3: Manuscript Revisions & Consistency Checklist
 
 ### 3.1 Data Tables & Metric Corrections
