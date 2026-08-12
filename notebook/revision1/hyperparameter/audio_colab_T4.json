@@ -15,7 +15,7 @@
   "pin_memory": true,
   "persistent_workers": true,
   "use_amp_fp16": true,
-  "early_stopping_patience": 3,
+  "early_stopping_patience": 5,
   "model_save_dir": "/content/drive/MyDrive/Gemastik26/models/revision1",
   "kfold_splits_file": "/content/drive/MyDrive/Gemastik26/kfold_splits.json",
   "scheduler_type": "CosineAnnealingLR",

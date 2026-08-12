@@ -2,7 +2,7 @@
 
 > **Date:** 11 August 2026
 > **Scope:** All notebooks under `notebook/revision1/`, hyperparameter configs, and `docs/revision_plan.md`
-> **Status:** Audit complete. Fixes not yet applied.
+> **Status:** Audit complete. **All fixes applied to code (12 Aug 2026)** — notebooks not yet re-executed; results below are pre-fix references.
 
 ---
 

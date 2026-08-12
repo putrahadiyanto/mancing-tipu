@@ -78,7 +78,7 @@ The training notebook follows a strict internal 8-stage execution flow:
 │   • Full Fine-Tuning: AdamW (all 86M ViT params) + AMP FP16                               │
 │   • Dynamic Scheduler: ReduceLROnPlateau(mode='min', factor=0.5, patience=2)            │
 │   • Early Stopping: Triggered if val loss fails to improve for 3 epochs (patience=3)  │
-│   • Save Checkpoints: dima806_deepfake_aug_fold1..5 to models/revision1/               │
+│   • Save Checkpoints: dima806_deepfake_aug_fold_1..5 to models/revision1/               │
 │   • VRAM Cleanup: del model + torch.cuda.empty_cache() between folds                   │
 └───────────────────────────────────────────┬────────────────────────────────────────────┘
                                             │
@@ -159,7 +159,7 @@ The training notebook follows a strict internal 8-stage execution flow:
     - Evaluate on fold validation videos without augmentation (`val_transform`).
     - **Dynamic Learning Rate Scheduling:** Apply `ReduceLROnPlateau(mode='min', factor=0.5, patience=2, min_lr=1e-6)` on validation loss, dropping learning rate when loss plateaus for 2 epochs.
     - **Early Stopping:** Trigger early stopping if validation loss fails to improve for 3 consecutive epochs (`patience=3`).
-    - Save fold models as `dima806_deepfake_aug_fold{K}`.
+    - Save fold models as `dima806_deepfake_aug_fold_{K}`.
   - Report 5-fold mean $\pm$ standard deviation for Accuracy, Precision, Recall, and Macro F1-Score.
   - **Independent Test Evaluation (Section 10):** Evaluates the 5-Fold Soft Voting Ensemble on the dedicated independent holdout test set (`testReal.zip` & `testAI.zip`), outputting an independent Test Set Confusion Matrix heatmap and classification report.
 
@@ -177,7 +177,7 @@ The training notebook follows a strict internal 8-stage execution flow:
   - **Learning Rate & Optimizer:** AdamW optimizer with initial `learning_rate = 3e-5` (0.00003) matching the original baseline notebook, and `weight_decay = 0.01`.
     - **Learning Rate Scheduling:** Apply `CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)` for smooth learning rate decay across all 10 epochs.
     - **Early Stopping:** Apply early stopping based on validation loss (`patience=3`).
-    - Save fold models as `melody_audio_aug_fold{K}` to `models/revision1/`.
+    - Save fold models as `melody_audio_aug_fold_{K}` to `models/revision1/`.
   - Report 5-fold mean $\pm$ standard deviation for Accuracy, Precision, Recall, and Macro F1-Score with subplot heatmaps and master combined OOF confusion matrix.
   - **Independent Test Evaluation (Section 10):** Evaluates 5-Fold Soft Voting Audio Ensemble on dedicated test archives (`testReal.zip` & `testAI.zip`), plotting independent Test Set Confusion Matrix heatmap and classification report.
 
@@ -185,7 +185,7 @@ The training notebook follows a strict internal 8-stage execution flow:
 - **Target File:** `notebook/revision1/kfold_multimodal_evaluation.ipynb`
 - **Status:** **IMPLEMENTED.**
 - **Task:**
-  - Load fine-tuned fold checkpoints for both Video (`dima806_deepfake_aug_fold1..5`) and Audio (`melody_audio_aug_fold1..5`) across all 5 folds.
+  - Load fine-tuned fold checkpoints for both Video (`dima806_deepfake_aug_fold_1..5`) and Audio (`melody_audio_aug_fold_1..5`) across all 5 folds.
   - Evaluate 50/50 multimodal late fusion ensemble:
     $$P_{\text{multimodal}} = 0.5 \cdot P_{\text{video}} + 0.5 \cdot P_{\text{audio}}$$
   - Report overall 5-fold mean $\pm$ standard deviation for Accuracy, Precision, Recall, and **Macro F1-Score** with subplot heatmaps and master combined OOF confusion matrix.
