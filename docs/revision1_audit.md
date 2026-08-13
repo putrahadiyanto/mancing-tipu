@@ -167,6 +167,48 @@ Apply the same fix to the fold-level and master heatmaps.
 
 ---
 
+## 🐛 POST-AUDIT FINDING — `kfold_multimodal_evaluation_v2.ipynb` Cell 13 frame-cache stem collision
+
+> **Date:** 13 Aug 2026
+> **Status:** **Root-caused and fixed.** Cell 13 in `notebook/revision1/kfold_multimodal_evaluation_v2.ipynb` was updated to store cached frames per-class.
+
+### Problem
+
+The "Video Saja" result on the independent test set was stuck at **60.90%** across every attempt to fix the frame pipeline (ffmpeg → PIL → cv2.imwrite, R/B channel swaps, transform changes). Changing the frame extraction code changed **nothing** — a strong hint the bug was elsewhere.
+
+### Root cause
+
+The frame cache was keyed on **video stem only**:
+
+```
+frame_paths_all[idx] = cache_frames(vf, os.path.join(FRAME_CACHE, stem), 1.0, 30)
+```
+
+`testReal.zip` and `testAI.zip` contain videos with **identical stems** — the AI clips are derived from the same Real sources (e.g. both zips have a `39.mp4`). Because `test_video_samples` lists Real videos first (indices 0–189), Real `39` populated `…/frames_cache_v2_{pid}/39/`. When AI `39` was processed, `cache_frames` hit the `existing` shortcut and returned the **Real twin's frames**. Every AI video was therefore scored against its Real counterpart's frames → P(AI) ≈ 0 → all videos predicted Real → exactly **60.90%** accuracy.
+
+The same stem-collision existed in **every** earlier pipeline variant (ffmpeg/PIL/swap), which is why all of them collapsed identically. The channel/normalization theories were red herrings.
+
+### The fix
+
+Include the true class in the cache subdir, mirroring the target video notebook's per-class layout `/content/dataset_frames_test/{cls}/{stem}/`:
+
+```
+frame_paths_all[idx] = cache_frames(vf, os.path.join(FRAME_CACHE, CLASSES[true_label], stem), 1.0, 30)
+```
+
+A fresh `frames_cache_v2_{pid}` root with class subdirs (`…/Real/{stem}/`, `…/AI/{stem}/`) was used, so no stale dirs are reused.
+
+### Evidence
+
+- **Pre-fix diagnostic (Cell 14):** On Real rows, `v2_cache_p1 == target_p1` exactly (cv2.imwrite fix was already live); on AI rows `n_v2 = 30` even when the true AI video yields `n_tgt = 10` or `0` frames — the 30-frame set was the Real twin's cache.
+- **Post-fix:** "Video Saja" jumped 60.90% → **96.15%**; "Audio Saja" **97.44%**; "Multimodal 50/50" **97.76%** — matching the video notebook's 96.15% reference.
+
+### Lesson
+
+Cache keys must be unique per (class, video), not per video stem, when two classes share stem names across archives.
+
+---
+
 ## 🗂️ Recommended Fix Order
 
 1. **F1** — one-line variable rename in the video notebook (blocks all video re-runs).
