@@ -20,11 +20,13 @@ notebook/                                      <-- Original Submission Notebooks
 └── gemastik_multimodal_fusion_evaluation.ipynb
 
 notebook/revision1/                            <-- Revision 1 (5-Fold Stratified GroupKFold Pipeline)
-├── gemastik_base_model_inference.ipynb        (Completed: Dedicated Base Model Zero-Shot Inference)
+├── gemastik_base_model_inference.ipynb        (Completed: Dedicated Base Model Zero-Shot Inference — Fold-1 val split)
 ├── generate_kfold_split.ipynb                 (Completed: 5-Fold Stratified GroupKFold Split Generator & EDA)
 ├── kfold_video_ai_detection.ipynb             (5-Fold Video ViT Fine-Tuning Pipeline — L4 Optimized)
-├── kfold_audio_ai_detection.ipynb             (5-Fold Audio Wav2Vec2 Fine-Tuning Pipeline)
-├── kfold_multimodal_evaluation.ipynb          (5-Fold Multimodal Fusion & Stage 2 AI-Only Evaluation)
+├── kfold_audio_ai_detection.ipynb             (5-Fold Audio Wav2Vec2 Fine-Tuning Pipeline — v1)
+├── kfold_audio_ai_detection_v2.ipynb          (5-Fold Audio Wav2Vec2 Fine-Tuning — v2 STABILIZED, saves to revision1_v2)
+├── kfold_multimodal_evaluation.ipynb          (5-Fold Multimodal Fusion & Stage 2 AI-Only Evaluation — v1)
+├── kfold_multimodal_evaluation_v2.ipynb       (5-Fold Multimodal Late Fusion — v2, Video revision1 + Audio revision1_v2)
 └── hyperparameter/                            <-- Modality & GPU Hyperparameter Config Directory
     ├── video_colab_L4.json                    (Video ViT — NVIDIA L4 24GB VRAM Hyperparameter Config)
     ├── video_colab_T4.json                    (Video ViT — NVIDIA T4 16GB VRAM Hyperparameter Config)
@@ -34,7 +36,8 @@ notebook/revision1/                            <-- Revision 1 (5-Fold Stratified
 Drive Directory Structure:
 /content/drive/MyDrive/Gemastik26/kfold_splits.json  <-- Exported 5-Fold Split Dictionary
 /content/drive/MyDrive/Gemastik26/models/            <-- Original Checkpoints (UNTOUCHED)
-/content/drive/MyDrive/Gemastik26/models/revision1/  <-- Revision 1 5-Fold Checkpoints
+/content/drive/MyDrive/Gemastik26/models/revision1/  <-- Revision 1 5-Fold Video + Audio (v1) Checkpoints
+/content/drive/MyDrive/Gemastik26/models/revision1_v2/ <-- Revision 1 v2 STABILIZED Audio Checkpoints (used by multimodal v2)
 ```
 
 ---
@@ -123,10 +126,10 @@ The training notebook follows a strict internal 8-stage execution flow:
 ### 1.2 Resolution of Review 2 Finding ("Akurasi 33,65% diduga bug")
 - When evaluating the raw pretrained audio model zero-shot before fine-tuning, interpreting output index `0` as `CLASSES[0] = "Real"` caused predictions to be **systematically inverted** ($100\% - 33.65\% = 66.35\%$).
 - **Fine-Tuning Behavior:** PyTorch re-trains the head with `id2label={0: "Real", 1: "AI"}`, so fine-tuned checkpoints output correct indices ($94.87\%$ accuracy).
-- **Corrected Zero-Shot Baselines:**
-  - Raw Video Baseline: **58.97%**
-  - Raw Audio Baseline: **66.35%** (corrected from 33.65%)
-  - Raw Ensemble Baseline: **63.78%** (corrected from 36.22%; lower than audio alone because raw video predictions dilute audio confidence).
+- **Corrected Zero-Shot Baselines (Fold-1 val split, 214 videos, `gemastik_base_model_inference.ipynb` Cell 8):**
+  - Raw Video Baseline: **61.68%**
+  - Raw Audio Baseline: **65.42%** (corrected from the inverted interpretation)
+  - Raw Multimodal Ensemble: **70.09%** (late fusion of un-finetuned models)
 
 ---
 
@@ -164,9 +167,14 @@ The training notebook follows a strict internal 8-stage execution flow:
   - **Independent Test Evaluation (Section 10):** Evaluates the 5-Fold Soft Voting Ensemble on the dedicated independent holdout test set (`testReal.zip` & `testAI.zip`), outputting an independent Test Set Confusion Matrix heatmap and classification report.
 
 ### 2.4 5-Fold Audio Wav2Vec2 Fine-Tuning Pipeline [COMPLETED]
-- **Target File:** `notebook/revision1/kfold_audio_ai_detection.ipynb`
-- **Status:** **IMPLEMENTED.**
-- **Save Location:** `MODEL_SAVE_DIR = "/content/drive/MyDrive/Gemastik26/models/revision1"`
+- **Target File:** `notebook/revision1/kfold_audio_ai_detection.ipynb` (v1) and `notebook/revision1/kfold_audio_ai_detection_v2.ipynb` (v2 STABILIZED)
+- **Status:** **IMPLEMENTED.** v2 is the current pipeline and saves to `models/revision1_v2/`; the multimodal v2 notebook loads audio checkpoints from there.
+- **Save Location:** v1 → `MODEL_SAVE_DIR = "/content/drive/MyDrive/Gemastik26/models/revision1"`; v2 → `MODEL_SAVE_DIR = "/content/drive/MyDrive/Gemastik26/models/revision1_v2"`
+- **v2 STABILIZED changes (see notebook header):**
+  - **Fix 1 — Gradient Clipping:** `clip_grad_norm_(max_norm=1.0)` after `scaler.unscale_()` (AMP-safe).
+  - **Fix 2 — Gentler Augmentation:** Gaussian noise SNR 20–35 dB (was 15–30 dB).
+  - **Fix 3 — Per-Fold Seeds:** `seed = 42 + fold_index` per fold (model init + shuffle + augmentation).
+  - Video-level OOF evaluation with tail-padded chunks (100% coverage).
 - **Task & Verification:** 
   - **Strict Split Loading:** Strictly load `kfold_splits.json` from Google Drive (`/content/drive/MyDrive/Gemastik26/kfold_splits.json`). No on-the-fly split generation fallback allowed; throws `FileNotFoundError` if missing.
   - **Pretrained Head Label Alignment:** Preserves `MelodyMachine`'s pretrained head alignment with `id2label = {0: "AI", 1: "Real"}` and `label2id = {"AI": 0, "Real": 1}`, setting sample target `0 = AI` and `1 = Real` to reuse pretrained classifier weights directly.
@@ -177,19 +185,20 @@ The training notebook follows a strict internal 8-stage execution flow:
   - **Learning Rate & Optimizer:** AdamW optimizer with initial `learning_rate = 3e-5` (0.00003) matching the original baseline notebook, and `weight_decay = 0.01`.
     - **Learning Rate Scheduling:** Apply `CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)` for smooth learning rate decay across all 10 epochs.
     - **Early Stopping:** Apply early stopping based on validation loss (`patience=3`).
-    - Save fold models as `melody_audio_aug_fold_{K}` to `models/revision1/`.
+    - Save fold models as `melody_audio_aug_fold_{K}` to `models/revision1_v2/` (v2) / `models/revision1/` (v1).
   - Report 5-fold mean $\pm$ standard deviation for Accuracy, Precision, Recall, and Macro F1-Score with subplot heatmaps and master combined OOF confusion matrix.
   - **Independent Test Evaluation (Section 10):** Evaluates 5-Fold Soft Voting Audio Ensemble on dedicated test archives (`testReal.zip` & `testAI.zip`), plotting independent Test Set Confusion Matrix heatmap and classification report.
 
 ### 2.5 5-Fold Multimodal Video + Audio Late Fusion Evaluation Pipeline [COMPLETED]
-- **Target File:** `notebook/revision1/kfold_multimodal_evaluation.ipynb`
+- **Target File:** `notebook/revision1/kfold_multimodal_evaluation.ipynb` (v1) and `notebook/revision1/kfold_multimodal_evaluation_v2.ipynb` (v2 — current)
 - **Status:** **IMPLEMENTED.**
 - **Task:**
-  - Load fine-tuned fold checkpoints for both Video (`dima806_deepfake_aug_fold_1..5`) and Audio (`melody_audio_aug_fold_1..5`) across all 5 folds.
+  - Load fine-tuned fold checkpoints for Video (`dima806_deepfake_aug_fold_1..5` from `models/revision1/`) and Audio (`melody_audio_aug_fold_1..5` from `models/revision1_v2/`) across all 5 folds.
   - Evaluate 50/50 multimodal late fusion ensemble:
     $$P_{\text{multimodal}} = 0.5 \cdot P_{\text{video}} + 0.5 \cdot P_{\text{audio}}$$
   - Report overall 5-fold mean $\pm$ standard deviation for Accuracy, Precision, Recall, and **Macro F1-Score** with subplot heatmaps and master combined OOF confusion matrix.
   - **Independent Test Evaluation (Section 10):** Evaluates 5-Fold Multimodal Soft Voting Ensemble on dedicated test archives (`testReal.zip` & `testAI.zip`), plotting independent Test Set Confusion Matrix heatmap and classification report.
+  - **Final results (v2, 13 Aug 2026):** Video Saja **96.15%**, Audio Saja **97.44%**, Multimodal 50/50 **97.76%** on the independent 312-video test set.
 
 ---
 
@@ -221,7 +230,7 @@ To ensure model robustness against social media compression and real-world audio
 ### 3.1 Data Tables & Metric Corrections
 - **Table II (Dataset Composition):** Update with exact 5-fold cross-validation split distributions (stems per fold, class balance).
 - **Table IV & Table V:** Replace single holdout metrics with **5-Fold Cross-Validation Mean $\pm$ Standard Deviation** metrics (Accuracy, Precision, Recall, Macro F1-Score).
-- **Hyperparameter Table:** Add explicit table detailing epochs, learning rate ($1\times 10^{-4}$ for video, $5\times 10^{-5}$ for audio), LR scheduler (`ReduceLROnPlateau` with factor 0.5 and patience 2), batch size, optimizer (AdamW), weight decay, frame rate (1 FPS), audio chunking (5s), early stopping patience (3), and 5-fold CV scheme.
+- **Hyperparameter Table:** Add explicit table detailing epochs, learning rate ($1\times 10^{-4}$ for video, $3\times 10^{-5}$ for audio), LR scheduler (`ReduceLROnPlateau` with factor 0.5 and patience 2 for video; `CosineAnnealingLR` with `eta_min=1e-6` for audio), batch size, optimizer (AdamW), weight decay, frame rate (1 FPS), audio chunking (5s), early stopping patience (3 for video, 5 for audio), and 5-fold CV scheme.
 
 ### 3.2 Subhead Titles & Terminology Standardization
 - Change subheader title: `"MATRIKS EVALUASI"` $\rightarrow$ `"METRIK EVALUASI"`.
@@ -250,10 +259,13 @@ Add a dedicated **Keterbatasan (Limitations)** subsection covering:
   - `gemastik_base_model_inference.ipynb` [Done]
   - `generate_kfold_split.ipynb` (Standalone 5-Fold Split Generator)
   - `kfold_video_ai_detection.ipynb` (5-Fold Video ViT Training)
-  - `kfold_audio_ai_detection.ipynb` (5-Fold Audio Wav2Vec2 Training)
-  - `kfold_multimodal_evaluation.ipynb` (5-Fold Multimodal Fusion & Stage 2 Evaluation)
+  - `kfold_audio_ai_detection.ipynb` (5-Fold Audio Wav2Vec2 Training — v1)
+  - `kfold_audio_ai_detection_v2.ipynb` (5-Fold Audio Wav2Vec2 Training — v2 STABILIZED, current)
+  - `kfold_multimodal_evaluation.ipynb` (5-Fold Multimodal Fusion & Stage 2 Evaluation — v1)
+  - `kfold_multimodal_evaluation_v2.ipynb` (5-Fold Multimodal Late Fusion — v2, current)
 - 📁 **Google Drive Directory:**
   - Split File: `/content/drive/MyDrive/Gemastik26/kfold_splits.json`
-  - Model Save Path: `/content/drive/MyDrive/Gemastik26/models/revision1/`
+  - Video Model Save Path: `/content/drive/MyDrive/Gemastik26/models/revision1/`
+  - Audio Model Save Path: `/content/drive/MyDrive/Gemastik26/models/revision1_v2/` (v2 audio)
 - 📄 **[`docs/revision_plan.md`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/docs/revision_plan.md)**: Master revision plan document.
 - 📄 **[`docs/agents.md`](file:///home/putra/Putra/Lomba/Gemastik-Mining/mancing-tipu/docs/agents.md)**: Multi-agent system architecture reference.

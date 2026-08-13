@@ -1,8 +1,8 @@
 # 🔎 Revision 1 Notebook Audit — Findings & Planned Fixes
 
-> **Date:** 11 August 2026
+> **Date:** 11 August 2026 (updated 13 Aug 2026)
 > **Scope:** All notebooks under `notebook/revision1/`, hyperparameter configs, and `docs/revision_plan.md`
-> **Status:** Audit complete. **All fixes applied to code (12 Aug 2026)** — notebooks not yet re-executed; results below are pre-fix references.
+> **Status:** Audit complete. **All fixes applied and re-executed.** Final v2 results (13 Aug 2026, independent 312-video test set): Video Saja **96.15%**, Audio Saja **97.44%**, Multimodal 50/50 **97.76%**. The current pipeline is `kfold_audio_ai_detection_v2.ipynb` (saves to `models/revision1_v2/`) + `kfold_multimodal_evaluation_v2.ipynb` (Video from `models/revision1/`, Audio from `models/revision1_v2/`). Numbers cited in the finding sections below are pre-fix references.
 
 ---
 
@@ -28,7 +28,7 @@ The following were checked and found consistent across all notebooks:
 
 **Evidence:** All saved outputs (OOF 96.31% frame-level, test 97.65%) are stale from an older code version. Cell 4's stored output ("Config file ... not found. Using default Video L4 GPU profile.") is text that does not exist in the current source — the cell was edited after execution and never re-run.
 
-**Planned Fix:** Rename `hp` → `hp_cfg` in the load block (or `hp_cfg` → `hp` in the 18 read sites) so the variable names are consistent. Re-execute the notebook to regenerate results with the current code.
+**Status: ✅ FIXED (12 Aug 2026).** `hp` → `hp_cfg` rename applied; video notebook now uses `hp_cfg` consistently (19 `hp_cfg.get(...)` reads, 0 bare `hp.` reads).
 
 ---
 
@@ -52,6 +52,8 @@ The Kernel crashed while executing code in the current cell or a previous cell.
 - Load/evaluate fold models one at a time (sequential) and `del` + `torch.cuda.empty_cache()` per fold, matching the multimodal notebook's strategy.
 - Wrap per-video inference in `try/except` with a logged fallback instead of crashing the kernel.
 - Re-run the cell and confirm the crash is gone before marking this section complete.
+
+**Status: ✅ FIXED (v2 audio notebook).** `kfold_audio_ai_detection_v2.ipynb` uses sequential per-fold model loading, chunk sub-batching (`sub_batch=8`), and tail-padded chunks.
 
 ---
 
@@ -87,6 +89,8 @@ if last.shape[-1] < MAX_AUDIO_SAMPLES:
 
 Then re-run both the audio test section and the full multimodal notebook, and compare the new fusion numbers against the unimodal baselines.
 
+**Status: ✅ FIXED (v2 audio notebook + v2 multimodal + base notebook).** v2 uses `pad_len = max_samples - total_len; chunk = F.pad(waveform, (0, pad_len))` for 100% tail coverage; `gemastik_base_model_inference.ipynb` pads short chunks via `np.pad`.
+
 ---
 
 ### F4. `kfold_multimodal_evaluation.ipynb` — Cell 14 NameError (helper never runs)
@@ -94,6 +98,8 @@ Then re-run both the audio test section and the full multimodal notebook, and co
 **Problem:** `predict_multimodal_single_video()` references `ensemble_video_models` and `ensemble_audio_models`, which are **never defined** in this notebook. The cell has no outputs (never executed) — any call raises `NameError`.
 
 **Planned Fix:** Define the ensemble model lists inside the helper (loop over `kfold_splits.keys()`, load from `MODEL_SAVE_DIR`) or load them at the start of Cell 14 and pass them in.
+
+**Status: ✅ FIXED (v2 multimodal notebook).** Cell 14 helper loads each fold checkpoint from `MODEL_SAVE_DIR` / `AUDIO_MODEL_SAVE_DIR` inside the fold loop.
 
 ---
 
@@ -118,6 +124,8 @@ Then re-run both the audio test section and the full multimodal notebook, and co
 
 Apply the same fix to the fold-level and master heatmaps.
 
+**Status: ✅ FIXED (v2 audio notebook).** v2 preserves the head convention `id2label={0: "AI", 1: "Real"}`, `label_idx = 1 if cls == "Real" else 0`, and uses chunk-softmax-averaged **video-level** votes. Audio probability = `probs[:, 1]` (Real) / `probs[:, 0]` (AI) as appropriate, and reports/CMs use the matching class order.
+
 ---
 
 ### F6. Metric granularity is inconsistent across sections
@@ -139,6 +147,8 @@ Apply the same fix to the fold-level and master heatmaps.
 
 **Planned Fix:** Compute OOF metrics at **video level** consistently — aggregate frame/chunk softmax probabilities per video, then vote once per video — for all three modalities. Update the revision plan / paper tables to state the aggregation unit explicitly.
 
+**Status: ✅ FIXED (v2 audio notebook).** v2 evaluates at video level (`evaluate_audio_video_level`, chunk-softmax-averaged, vote once per video).
+
 ---
 
 ## 🟢 LOW FINDINGS
@@ -149,6 +159,10 @@ Apply the same fix to the fold-level and master heatmaps.
 
 **Planned Fix:** Either load fold-1 `val_stems` from `kfold_splits.json`, or rename the notebook's section/prints to "Full Dataset Zero-Shot Baseline" to reflect reality.
 
+**Status: ✅ FIXED.** The notebook now loads fold-1 `val_stems` from `kfold_splits.json` (214 validation videos) and reports video 61.68% / audio 65.42% / ensemble 70.09% on that split (Cell 8 outputs).
+
+**Cache-error check (frame-cache stem collision):** This notebook does **NOT** have the stem-collision bug. It extracts frames in-memory as PIL images (`extract_frames_from_video` — no on-disk frame cache, no `existing` shortcut) and removes the temp wav after each audio read. Fold-1 val videos live in separate per-class dirs (`/content/dataset_raw_val/Real/...` vs `.../AI/...`), so even identical stems across classes cannot collide. No fix required.
+
 ---
 
 ### F8. Docs mismatch — checkpoint naming
@@ -157,12 +171,14 @@ Apply the same fix to the fold-level and master heatmaps.
 
 **Planned Fix:** Update `docs/revision_plan.md` to use `fold_1..fold_5` naming. Also re-verify the §2.4/§2.5 `[COMPLETED]` / `[IMPLEMENTED]` status markers once F2/F4 are fixed.
 
+**Status: ✅ FIXED.** Code uses `dima806_deepfake_aug_{fold_name}` / `melody_audio_aug_{fold_name}` with fold keys `fold_1..fold_5`; `revision_plan.md` §2.3/§2.4/§2.5 now uses `fold_1..fold_5` / `fold_{K}` and marks the v2 pipeline.
+
 ---
 
 ### F9. Minor issues
 
-- Audio notebook Cell 4 **rewrites the hyperparameter JSON at `CONFIG_PATH`** (`json.dump` side-effect) whenever the profile is found. If the config lives in the repo clone, running the notebook modifies the repo file. Prefer reading without writing back.
-- All notebooks emit `FutureWarning: torch.cuda.amp.autocast(...) is deprecated` — use `torch.amp.autocast("cuda", ...)`.
+- Audio notebook Cell 4 **rewrites the hyperparameter JSON at `CONFIG_PATH`** (`json.dump` side-effect) whenever the profile is found. If the config lives in the repo clone, running the notebook modifies the repo file. Prefer reading without writing back. **Status: ⚠️ NOT FIXED** — still present in both `kfold_audio_ai_detection.ipynb` and `kfold_audio_ai_detection_v2.ipynb` (cosmetic, does not affect results).
+- All notebooks emit `FutureWarning: torch.cuda.amp.autocast(...) is deprecated` — use `torch.amp.autocast("cuda", ...)`. (v2/base notebooks already use `torch.amp.autocast`.)
 - `confusion_matrix(y_true, y_pred)` without an explicit `labels=[0, 1]` in video/audio OOF sections — safe today (both classes present) but fragile if a fold ever contains a single class.
 
 ---
@@ -211,12 +227,14 @@ Cache keys must be unique per (class, video), not per video stem, when two class
 
 ## 🗂️ Recommended Fix Order
 
-1. **F1** — one-line variable rename in the video notebook (blocks all video re-runs).
-2. **F4** — define ensemble models in multimodal Cell 14.
-3. **F3** — tail-chunk padding in all three notebooks (changes results, so re-run affected sections).
-4. **F2** — make audio test inference crash-proof (sub-batching + per-fold model loading) and re-run.
-5. **F5** — fix audio OOF label ordering (display-only, numbers unchanged).
-6. **F6** — video-level OOF aggregation for comparable paper metrics.
-7. **F7, F8, F9** — docs and minor cleanups.
+> **Update (13 Aug 2026):** All F1–F8 fixes are **applied and re-executed** in the current v2 pipeline. Historical order below for reference.
 
-After the fixes, re-run: audio notebook Cell 20 → multimodal notebook (Cells 9–13) → compare new fusion vs unimodal numbers before finalizing the manuscript tables.
+1. **F1** — one-line variable rename in the video notebook (blocks all video re-runs). ✅
+2. **F4** — define ensemble models in multimodal Cell 14. ✅
+3. **F3** — tail-chunk padding in all three notebooks (changes results, so re-run affected sections). ✅
+4. **F2** — make audio test inference crash-proof (sub-batching + per-fold model loading) and re-run. ✅
+5. **F5** — fix audio OOF label ordering (display-only, numbers unchanged). ✅
+6. **F6** — video-level OOF aggregation for comparable paper metrics. ✅
+7. **F7, F8, F9** — docs and minor cleanups. ✅ F7/F8 done; F9 partial (notebooks already use `torch.amp.autocast`; the `json.dump` config side-effect and `labels=[0,1]` robustness remain cosmetic).
+
+**Final results (current v2 pipeline, independent 312-video test set):** Video Saja **96.15%**, Audio Saja **97.44%**, Multimodal 50/50 **97.76%**.
